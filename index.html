@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>የ1-ደቂቃ ዲጂታል ሱቅ</title>
+    <style>
+        * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
+        body { background: #f4f6f8; padding: 15px; color: #333; }
+        .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2, h3 { margin-bottom: 10px; color: #1a1a1a; }
+        input, button { width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; }
+        button { background: #0088cc; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #006699; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .product-card { background: #fff; border-radius: 8px; border: 1px solid #eee; overflow: hidden; text-align: center; padding: 10px; }
+        .product-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
+        .price { font-weight: bold; color: #28a745; margin: 5px 0; }
+        .buy-btn { background: #28a745; padding: 8px; font-size: 13px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. የሱቅ መመዝገቢያ (Store Login/Register) -->
+    <div class="card" id="login-section">
+        <h2>📱 በስልክ ቁጥርዎ ይግቡ / ሱቅ ይክፈቱ</h2>
+        <input type="text" id="sellerPhone" placeholder="የስልክ ቁጥር (ምሳሌ፡ 0912345678)">
+        <input type="text" id="storeName" placeholder="የሱቅዎ ስም (ምሳሌ፡ Mela Fashion)">
+        <button onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
+    </div>
+
+    <!-- 2. የነጋዴው ማስገቢያ ፎርም (Seller Dashboard) -->
+    <div class="card hidden" id="seller-section">
+        <h2 id="welcomeMsg">🛍️ አዲስ ምርት ጨምር</h2>
+        <input type="text" id="prodName" placeholder="የምርቱ ስም">
+        <input type="number" id="prodPrice" placeholder="ዋጋ (በብር)">
+        <input type="text" id="prodImage" placeholder="የምርቱ ፎቶ Link (URL)">
+        <button onclick="addProduct()">ምርቱን መዝግብ 💾</button>
+    </div>
+
+    <!-- 3. ለደንበኛው የሚታየው ሱቅ (Customer Catalog View) -->
+    <div class="card">
+        <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
+        <div class="grid" id="productGrid">
+            <!-- ምርቶች በAPI ጥሪ ከዳታቤዝ ገብተው እዚህ ይደረደራሉ -->
+        </div>
+    </div>
+
+    <script>
+        // የ backend API አድራሻህ (Vercel/Render ላይ ከጫንከው በኋላ እዚህ ትቀይረዋለህ)
+        const API_URL = "https://your-backend-api.vercel.app/api"; 
+        let currentPhone = "";
+
+        async function loginOrRegisterStore() {
+            const phone = document.getElementById('sellerPhone').value;
+            const store = document.getElementById('storeName').value;
+
+            if (!phone) {
+                alert('እባክዎን የስልክ ቁጥር ያስገቡ!');
+                return;
+            }
+
+            currentPhone = phone;
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('seller-section').classList.remove('hidden');
+            document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
+
+            // የነጋዴውን ምርቶች ከዳታቤዝ መጫን
+            loadStoreProducts(phone);
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('prodName').value;
+            const price = document.getElementById('prodPrice').value;
+            const imageUrl = document.getElementById('prodImage').value;
+
+            if (!name || !price) {
+                alert('እባክዎን ስምና ዋጋ ያስገቡ!');
+                return;
+            }
+
+            // ወደ Backend POST request መላክ
+            try {
+                const res = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        seller_phone: currentPhone,
+                        name: name,
+                        price: price,
+                        image_url: imageUrl || 'https://via.placeholder.com/150'
+                    })
+                });
+
+                if (res.ok) {
+                    alert('ምርቱ በዳታቤዝ ተመዝግቧል!');
+                    document.getElementById('prodName').value = '';
+                    document.getElementById('prodPrice').value = '';
+                    document.getElementById('prodImage').value = '';
+                    loadStoreProducts(currentPhone); // ዝርዝሩን ማደስ
+                }
+            } catch (err) {
+                console.error("Error saving product:", err);
+                alert("ከዳታቤዝ ጋር ማገናኘት አልተቻለም!");
+            }
+        }
+
+        async function loadStoreProducts(phone) {
+            try {
+                const res = await fetch(`${API_URL}/products/${phone}`);
+                const products = await res.json();
+                renderProducts(products);
+            } catch (err) {
+                console.error("Error loading products:", err);
+            }
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = '';
+            if(!products || products.length === 0) {
+                grid.innerHTML = '<p>ምንም የተጫነ ምርት የለም።</p>';
+                return;
+            }
+            products.forEach((p) => {
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <img src="${p.image_url}">
+                        <h4>${p.name}</h4>
+                        <div class="price">${p.price} ብር</div>
+                        <button class="buy-btn" onclick="buyProduct('${p.name}', '${p.price}')">በቴሌብር ግዛ</button>
+                    </div>
+                `;
+            });
+        }
+
+        function buyProduct(name, price) {
+            alert(`የ'${name}' ትእዛዝ ተመዝግቧል። እባክዎን ${price} ብር በቴሌብር ይላኩ!`);
+        }
+    </script>
+</body>
+</html>

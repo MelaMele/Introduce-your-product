@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <!-- 1. የሱቅ መመዝገቢያ (Store Login/Register) -->
+    <!-- 1. የሱቅ መመዝገቢያ -->
     <div class="card" id="login-section">
         <h2>📱 በስልክ ቁጥርዎ ይግቡ / ሱቅ ይክፈቱ</h2>
         <input type="text" id="sellerPhone" placeholder="የስልክ ቁጥር (ምሳሌ፡ 0912345678)">
@@ -30,26 +30,24 @@
         <button onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
     </div>
 
-    <!-- 2. የነጋዴው ማስገቢያ ፎርም (Seller Dashboard) -->
+    <!-- 2. የነጋዴው ማስገቢያ ፎርም -->
     <div class="card hidden" id="seller-section">
         <h2 id="welcomeMsg">🛍️ አዲስ ምርት ጨምር</h2>
         <input type="text" id="prodName" placeholder="የምርቱ ስም">
         <input type="number" id="prodPrice" placeholder="ዋጋ (በብር)">
         <input type="text" id="prodImage" placeholder="የምርቱ ፎቶ Link (URL)">
-        <button onclick="addProduct()">ምርቱን መዝግብ 💾</button>
+        <button onclick="addProduct()">ምርቱን በSpreadsheet መዝግብ 💾</button>
     </div>
 
-    <!-- 3. ለደንበኛው የሚታየው ሱቅ (Customer Catalog View) -->
+    <!-- 3. ለደንበኛው የሚታየው ሱቅ -->
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
-        <div class="grid" id="productGrid">
-            <!-- ምርቶች በAPI ጥሪ ከዳታቤዝ ገብተው እዚህ ይደረደራሉ -->
-        </div>
+        <div class="grid" id="productGrid"></div>
     </div>
 
     <script>
-        // የ backend API አድራሻህ (Vercel/Render ላይ ከጫንከው በኋላ እዚህ ትቀይረዋለህ)
-        const API_URL = "https://your-backend-api.vercel.app/api"; 
+        // የ Google Apps Script Web App URL እዚህ ጋር ተካው
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8H8Qft5KlXkJ8HVmxVhb5tQpz6kT2iTWf9cIcAl6JAyUYfpRJCp9hpzVvKzQEibcA/exec"; 
         let currentPhone = "";
 
         async function loginOrRegisterStore() {
@@ -66,7 +64,14 @@
             document.getElementById('seller-section').classList.remove('hidden');
             document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
 
-            // የነጋዴውን ምርቶች ከዳታቤዝ መጫን
+            // በ Spreadsheet መመዝገብ
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'register_store', phone: phone, store_name: store })
+            });
+
             loadStoreProducts(phone);
         }
 
@@ -80,35 +85,30 @@
                 return;
             }
 
-            // ወደ Backend POST request መላክ
-            try {
-                const res = await fetch(`${API_URL}/products`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        seller_phone: currentPhone,
-                        name: name,
-                        price: price,
-                        image_url: imageUrl || 'https://via.placeholder.com/150'
-                    })
-                });
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'add_product',
+                    seller_phone: currentPhone,
+                    name: name,
+                    price: price,
+                    image_url: imageUrl || 'https://via.placeholder.com/150'
+                })
+            });
 
-                if (res.ok) {
-                    alert('ምርቱ በዳታቤዝ ተመዝግቧል!');
-                    document.getElementById('prodName').value = '';
-                    document.getElementById('prodPrice').value = '';
-                    document.getElementById('prodImage').value = '';
-                    loadStoreProducts(currentPhone); // ዝርዝሩን ማደስ
-                }
-            } catch (err) {
-                console.error("Error saving product:", err);
-                alert("ከዳታቤዝ ጋር ማገናኘት አልተቻለም!");
-            }
+            alert('ምርቱ በ Spreadsheet ተመዝግቧል!');
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodImage').value = '';
+
+            setTimeout(() => { loadStoreProducts(currentPhone); }, 1500);
         }
 
         async function loadStoreProducts(phone) {
             try {
-                const res = await fetch(`${API_URL}/products/${phone}`);
+                const res = await fetch(`${SCRIPT_URL}?phone=${phone}`);
                 const products = await res.json();
                 renderProducts(products);
             } catch (err) {

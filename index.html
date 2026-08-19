@@ -65,7 +65,6 @@
     </div>
 
     <script>
-        // የራስህን የ Apps Script Web App URL እዚህ ጋር ተካው
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGs6sAsMgPHLiOIhmWxsU0zWwcVtiI12b_se5dSPshYTHGQ3fKU2AaGPuFRHOPfghy/exec"; 
         let currentPhone = "";
 
@@ -149,10 +148,8 @@
         // የፎቶ መጠን ማነሻ ፋንክሽን (Image Compressor)
         function compressImage(file, maxWidth, quality, callback) {
             const reader = new FileReader();
-            reader.readAsDataURL(file);
             reader.onload = function(event) {
                 const img = new Image();
-                img.src = event.target.result;
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     let width = img.width;
@@ -171,10 +168,8 @@
                     const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
                     callback(compressedBase64);
                 };
-
-        }
+                img.src = event.target.result;
             };
-
             reader.readAsDataURL(file);
         }
 

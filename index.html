@@ -18,11 +18,13 @@
         .share-box { background: #eef7ff; border: 1px dashed #0088cc; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; }
         .share-box p { font-size: 13px; color: #333; word-break: break-all; font-weight: bold; margin-bottom: 8px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-        .product-card { background: #fff; border-radius: 10px; border: 1px solid #eee; overflow: hidden; text-align: center; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .product-card { background: #fff; border-radius: 10px; border: 1px solid #eee; overflow: hidden; text-align: center; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); position: relative; }
         .product-card img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; background: #f0f0f0; }
         .product-card h4 { font-size: 14px; margin: 8px 0 4px; color: #222; }
         .price { font-weight: bold; color: #28a745; margin-bottom: 8px; font-size: 15px; }
-        .buy-btn { background: #28a745; padding: 8px; font-size: 13px; margin: 0; }
+        .buy-btn { background: #0088cc; padding: 8px; font-size: 13px; margin: 4px 0 0; }
+        .delete-btn { background: #dc3545; padding: 6px; font-size: 11px; margin-top: 5px; }
+        .search-box { margin-bottom: 15px; }
         .hidden { display: none; }
         .status-msg { font-size: 13px; color: #666; text-align: center; margin-top: 5px; }
     </style>
@@ -37,6 +39,9 @@
         
         <label for="storeName">የሱቅዎ ስም</label>
         <input type="text" id="storeName" placeholder="ምሳሌ፡ Mela Fashion">
+
+        <label for="telegramUser">የቴሌግራም ዩዘርኔም (ያለ @)</label>
+        <input type="text" id="telegramUser" placeholder="ምሳሌ፡ mela_store">
         
         <button onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
     </div>
@@ -51,13 +56,13 @@
         <label for="prodPrice">ዋጋ (በብር)</label>
         <input type="number" id="prodPrice" placeholder="ምሳሌ፡ 2500">
         
-        <label for="prodImageFile">የምርቱ ፎቶ (ከካሜራ ወይም ከጋለሪ)</label>
+        <label for="prodImageFile">የምርቱ ፎቶ</label>
         <input type="file" id="prodImageFile" accept="image/*" capture="environment">
         
         <button id="saveBtn" onclick="addProduct()">ምርቱን መዝግብ 📸</button>
         <div id="loadingStatus" class="status-msg"></div>
 
-        <!-- የሱቅ ሊንክ ማጋሪያ Box -->
+        <!-- የሱቅ ሊንክ ማጋሪያ -->
         <div class="share-box">
             <span style="font-size: 12px; color: #555;">የእርስዎ የሱቅ ሊንክ (ለደንበኞች የሚያጋሩት)፡</span>
             <p id="storeShareUrl">...</p>
@@ -68,25 +73,32 @@
     <!-- 3. ለደንበኛው የሚታየው ሱቅ -->
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
+        
+        <!-- የምርት ፍለጋ ሳጥን (Search Bar) -->
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 ምርት በስም ፈልግ..." onkeyup="filterProducts()">
+
         <div class="grid" id="productGrid">
             <p style="grid-column: 1/-1; text-align: center; color: #888;">ምንም የተጫነ ምርት የለም።</p>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwyn_rW-yLyok0tVkk9xizJP8hgYWO7rIeKImgG5yWu5Druv04UIBTb1sioMZxzEoe/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_KuxupH5jnMp9JMTa-rf3nCa6P6UBKQWP_pKRA0vhyO-1DLBrmk55OO294O6nj9s/exec"; 
         let currentPhone = "";
+        let telegramUsername = "";
+        let allProducts = [];
+        let isSeller = false;
 
-        // የስልክ ቁጥር ማጽጃ
         function cleanPhone(p) {
             if(!p) return "";
             let str = String(p).replace(/\D/g, '');
-            return str.slice(-9); // የመጨረሻዎቹን 9 ቁጥሮች ብቻ መውሰድ
+            return str.slice(-9);
         }
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const phoneParam = urlParams.get('phone');
+            telegramUsername = urlParams.get('tg') || "";
 
             if (phoneParam) {
                 const cleanedPhone = cleanPhone(phoneParam);
@@ -100,26 +112,33 @@
         async function loginOrRegisterStore() {
             const rawPhone = document.getElementById('sellerPhone').value.trim();
             const store = document.getElementById('storeName').value.trim();
+            telegramUsername = document.getElementById('telegramUser').value.trim().replace('@', '');
 
             if (!rawPhone) {
                 alert('እባክዎን የስልክ ቁጥር ያስገቡ!');
                 return;
             }
 
+            isSeller = true;
             currentPhone = cleanPhone(rawPhone);
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('seller-section').classList.remove('hidden');
             document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
             document.getElementById('storeTitle').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - የዕቃዎች ዝርዝር`;
 
-            const shareUrl = `${window.location.origin}${window.location.pathname}?phone=${currentPhone}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?phone=${currentPhone}&tg=${telegramUsername}`;
             document.getElementById('storeShareUrl').innerText = shareUrl;
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'register_store', phone: currentPhone, store_name: store })
+                body: JSON.stringify({ 
+                    action: 'register_store', 
+                    phone: currentPhone, 
+                    store_name: store,
+                    telegram_username: telegramUsername
+                })
             });
 
             loadStoreProducts(currentPhone);
@@ -128,7 +147,7 @@
         function copyStoreLink() {
             const shareUrl = document.getElementById('storeShareUrl').innerText;
             navigator.clipboard.writeText(shareUrl);
-            alert('የሱቅዎ ሊንክ ኮፒ ተደርጓል! ለደንበኞችዎ ማጋራት ይችላሉ።');
+            alert('የሱቅዎ ሊንክ ኮፒ ተደርጓል!');
         }
 
         async function addProduct() {
@@ -145,12 +164,10 @@
 
             saveBtn.innerText = "ፎቶው እየተዘጋጀ ነው... ⏳";
             saveBtn.disabled = true;
-            statusDiv.innerText = "የፎቶውን መጠን በማነስ ላይ...";
 
             const file = fileInput.files[0];
-            
             compressImage(file, 800, 0.7, async function(base64Image) {
-                statusDiv.innerText = "ፎቶው ወደ Google Drive እየተላከ ነው...";
+                statusDiv.innerText = "ምርቱ ወደ ሲስተም እየተላከ ነው...";
                 
                 try {
                     await fetch(SCRIPT_URL, {
@@ -166,7 +183,7 @@
                         })
                     });
 
-                    alert('ምርቱ ከነፎቶው በተሳካ ሁኔታ ተመዝግቧል!');
+                    alert('ምርቱ በተሳካ ሁኔታ ተመዝግቧል!');
                     document.getElementById('prodName').value = '';
                     document.getElementById('prodPrice').value = '';
                     document.getElementById('prodImageFile').value = '';
@@ -175,7 +192,6 @@
                     setTimeout(() => { loadStoreProducts(currentPhone); }, 2500);
                 } catch(err) {
                     alert('ምርቱን ሲጭን ስህተት አጋጥሟል!');
-                    statusDiv.innerText = "";
                 } finally {
                     saveBtn.innerText = "ምርቱን መዝግብ 📸";
                     saveBtn.disabled = false;
@@ -189,21 +205,16 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-
+                    let width = img.width, height = img.height;
                     if (width > maxWidth) {
                         height = Math.round((height * maxWidth) / width);
                         width = maxWidth;
                     }
-
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-                    callback(compressedBase64);
+                    callback(canvas.toDataURL('image/jpeg', quality));
                 };
                 img.src = event.target.result;
             };
@@ -211,14 +222,19 @@
         }
 
         async function loadStoreProducts(phone) {
-            const grid = document.getElementById('productGrid');
             try {
                 const res = await fetch(`${SCRIPT_URL}?phone=${phone}`);
-                const products = await res.json();
-                renderProducts(products);
+                allProducts = await res.json();
+                renderProducts(allProducts);
             } catch (err) {
                 console.error("Error loading products:", err);
             }
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query));
+            renderProducts(filtered);
         }
 
         function renderProducts(products) {
@@ -229,19 +245,56 @@
                 return;
             }
             products.forEach((p) => {
+                let deleteBtnHtml = isSeller ? `<button class="delete-btn" onclick="deleteProduct('${p.id}')">አጥፋ 🗑️</button>` : '';
                 grid.innerHTML += `
                     <div class="product-card">
                         <img src="${p.image_url}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150'">
                         <h4>${p.name}</h4>
                         <div class="price">${p.price} ብር</div>
-                        <button class="buy-btn" onclick="buyProduct('${p.name}', '${p.price}')">በቴሌብር ግዛ</button>
+                        <button class="buy-btn" onclick="orderByTelegram('${p.name}', '${p.price}', '${p.seller_phone}')">በቴሌግራም እዘዝ ✈️</button>
+                        ${deleteBtnHtml}
                     </div>
                 `;
             });
         }
 
-        function buyProduct(name, price) {
-            alert(`የ'${name}' ትእዛዝ ተመዝግቧል። እባክዎን ${price} ብር በቴሌብር ይላኩ!`);
+        async function deleteProduct(productId) {
+            if (!confirm('እርግጠኛ ነዎት ይህንን ምርት ማጥፋት ይፈልጋሉ?')) return;
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete_product', product_id: productId })
+            });
+
+            alert('ምርቱ ጠፍቷል!');
+            setTimeout(() => { loadStoreProducts(currentPhone); }, 1500);
+        }
+
+        async function orderByTelegram(prodName, price, sellerPhone) {
+            const custPhone = prompt("እባክዎን የትዕዛዝ ማረጋገጫ የስልክ ቁጥርዎን ያስገቡ፡");
+            if (!custPhone) return;
+
+            // 1. ትዕዛዙን በ Sheet መመዝገብ
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'create_order',
+                    seller_phone: sellerPhone,
+                    product_name: prodName,
+                    price: price,
+                    customer_phone: custPhone
+                })
+            });
+
+            // 2. ወደ ቴሌግራም መምራት
+            const message = encodeURIComponent(`ሰላም! '${prodName}' በ ${price} ብር ማዘዝ እፈልጋለሁ።\nየእኔ ስልክ ቁጥር፡ ${custPhone}`);
+            let tgLink = telegramUsername ? `https://t.me/${telegramUsername}?text=${message}` : `https://t.me/share/url?url=&text=${message}`;
+            
+            window.open(tgLink, '_blank');
         }
     </script>
 </body>

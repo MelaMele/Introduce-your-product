@@ -29,11 +29,11 @@
 </head>
 <body>
 
-    <!-- 1. የሱቅ መመዝገቢያ/መግቢያ (ለነጋዴው ብቻ) -->
+    <!-- 1. የሱቅ መመዝገቢያ/መግቢያ (ለነጋዴው) -->
     <div class="card" id="login-section">
         <h2>📱 በስልክ ቁጥርዎ ይግቡ / ሱቅ ይክፈቱ</h2>
         <label for="sellerPhone">የስልክ ቁጥር</label>
-        <input type="tel" id="sellerPhone" placeholder="ምሳሌ፡ 0912345678">
+        <input type="tel" id="sellerPhone" placeholder="ምሳሌ፡ 0913064239">
         
         <label for="storeName">የሱቅዎ ስም</label>
         <input type="text" id="storeName" placeholder="ምሳሌ፡ Mela Fashion">
@@ -41,7 +41,7 @@
         <button onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
     </div>
 
-    <!-- 2. የነጋዴው ማስገቢያ ፎርም (ለነጋዴው ብቻ) -->
+    <!-- 2. የነጋዴው ማስገቢያ ፎርም (ለነጋዴው) -->
     <div class="card hidden" id="seller-section">
         <h2 id="welcomeMsg">🛍️ አዲስ ምርት ጨምር</h2>
         
@@ -59,13 +59,13 @@
 
         <!-- የሱቅ ሊንክ ማጋሪያ Box -->
         <div class="share-box">
-            <span style="font-size: 12px; color: #555;">የእርስዎ የሱቅ ሊንክ ለደንበኞች የሚያጋሩት፡</span>
+            <span style="font-size: 12px; color: #555;">የእርስዎ የሱቅ ሊንክ (ለደንበኞች የሚያጋሩት)፡</span>
             <p id="storeShareUrl">...</p>
             <button onclick="copyStoreLink()" style="background: #17a2b8; margin: 0; padding: 8px; font-size: 12px;">ሊንኩን ኮፒ አድርግ 📋</button>
         </div>
     </div>
 
-    <!-- 3. ለደንበኛው የሚታየው ሱቅ (ለሁለቱም ይታያል) -->
+    <!-- 3. ለደንበኛው የሚታየው ሱቅ -->
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
         <div class="grid" id="productGrid">
@@ -74,50 +74,55 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGs6sAsMgPHLiOIhmWxsU0zWwcVtiI12b_se5dSPshYTHGQ3fKU2AaGPuFRHOPfghy/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwyn_rW-yLyok0tVkk9xizJP8hgYWO7rIeKImgG5yWu5Druv04UIBTb1sioMZxzEoe/exec"; 
         let currentPhone = "";
 
-        // ገጹ ሲከፈት URL parameter መኖሩን ማረጋገጫ (Customer View vs Seller View)
+        // የስልክ ቁጥር ማጽጃ
+        function cleanPhone(p) {
+            if(!p) return "";
+            let str = String(p).replace(/\D/g, '');
+            return str.slice(-9); // የመጨረሻዎቹን 9 ቁጥሮች ብቻ መውሰድ
+        }
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const phoneParam = urlParams.get('phone');
 
             if (phoneParam) {
-                // ደንበኛ ከሆነ የመግቢያና የምርት መጨመሪያ ፎርሞችን እንደበቃለን
+                const cleanedPhone = cleanPhone(phoneParam);
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('seller-section').classList.add('hidden');
-                document.getElementById('storeTitle').innerText = `🛒 የሱቅ ካታሎግ (${phoneParam})`;
-                loadStoreProducts(phoneParam);
+                document.getElementById('storeTitle').innerText = `🛒 የሱቅ ካታሎግ`;
+                loadStoreProducts(cleanedPhone);
             }
         };
 
         async function loginOrRegisterStore() {
-            const phone = document.getElementById('sellerPhone').value.trim();
+            const rawPhone = document.getElementById('sellerPhone').value.trim();
             const store = document.getElementById('storeName').value.trim();
 
-            if (!phone) {
+            if (!rawPhone) {
                 alert('እባክዎን የስልክ ቁጥር ያስገቡ!');
                 return;
             }
 
-            currentPhone = phone;
+            currentPhone = cleanPhone(rawPhone);
             document.getElementById('login-section').classList.add('hidden');
             document.getElementById('seller-section').classList.remove('hidden');
             document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
             document.getElementById('storeTitle').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - የዕቃዎች ዝርዝር`;
 
-            // የሱቅ ሊንክ ማዘጋጀት
-            const shareUrl = `${window.location.origin}${window.location.pathname}?phone=${phone}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?phone=${currentPhone}`;
             document.getElementById('storeShareUrl').innerText = shareUrl;
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'register_store', phone: phone, store_name: store })
+                body: JSON.stringify({ action: 'register_store', phone: currentPhone, store_name: store })
             });
 
-            loadStoreProducts(phone);
+            loadStoreProducts(currentPhone);
         }
 
         function copyStoreLink() {

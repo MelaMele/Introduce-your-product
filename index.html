@@ -17,6 +17,12 @@
         button:disabled { background: #aaa; cursor: not-allowed; }
         .share-box { background: #eef7ff; border: 1px dashed #0088cc; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; }
         .share-box p { font-size: 13px; color: #333; word-break: break-all; font-weight: bold; margin-bottom: 8px; }
+        
+        /* የክፍያ ማስጠንቀቂያ ሳጥን CSS */
+        .pay-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .pay-banner h3 { color: #856404; margin-bottom: 6px; }
+        .pay-banner a { display: inline-block; background: #28a745; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 8px; }
+
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
         .product-card { background: #fff; border-radius: 10px; border: 1px solid #eee; overflow: hidden; text-align: center; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); position: relative; }
         .product-card img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; background: #f0f0f0; }
@@ -45,24 +51,33 @@
         <label for="telegramUser">የቴሌግራም ዩዘርኔም (ያለ @)</label>
         <input type="text" id="telegramUser" placeholder="ምሳሌ፡ mela_store">
         
-        <button onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
+        <button id="loginBtn" onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
     </div>
 
-    <!-- 2. የነጋዴው ማስገቢያ ፎርም (ለነጋዴው) -->
+    <!-- 2. የነጋዴው ማስገቢያ ፎርም -->
     <div class="card hidden" id="seller-section">
         <h2 id="welcomeMsg">🛍️ አዲስ ምርት ጨምር</h2>
+
+        <!-- የክፍያ ማስጠንቀቂያ ሳጥን (ለጊዜው የተሰወረ) -->
+        <div id="paymentAlert" class="pay-banner hidden">
+            <h3 id="payAlertTitle">⚠️ የነፃ ሞከራ ጊዜዎ አብቅቷል!</h3>
+            <p id="payAlertDesc">ያልተገደበ አገልግሎት ለማግኘት እና ተጨማሪ ምርቶችን ለመጫን አባልነትዎን ያድሱ።</p>
+            <a href="https://t.me/mela_store" target="_blank">አሁኑኑ ይክፈሉ (Contact Admin) 💳</a>
+        </div>
         
-        <label for="prodName">የምርቱ ስም</label>
-        <input type="text" id="prodName" placeholder="ምሳሌ፡ የወንዶች ጂንስ">
-        
-        <label for="prodPrice">ዋጋ (በብር)</label>
-        <input type="number" id="prodPrice" placeholder="ምሳሌ፡ 2500">
-        
-        <label for="prodImageFile">የምርቱ ፎቶ</label>
-        <input type="file" id="prodImageFile" accept="image/*" capture="environment">
-        
-        <button id="saveBtn" onclick="addProduct()">ምርቱን መዝግብ 📸</button>
-        <div id="loadingStatus" class="status-msg"></div>
+        <div id="addProductForm">
+            <label for="prodName">የምርቱ ስም</label>
+            <input type="text" id="prodName" placeholder="ምሳሌ፡ የወንዶች ጂንስ">
+            
+            <label for="prodPrice">ዋጋ (በብር)</label>
+            <input type="number" id="prodPrice" placeholder="ምሳሌ፡ 2500">
+            
+            <label for="prodImageFile">የምርቱ ፎቶ</label>
+            <input type="file" id="prodImageFile" accept="image/*" capture="environment">
+            
+            <button id="saveBtn" onclick="addProduct()">ምርቱን መዝግብ 📸</button>
+            <div id="loadingStatus" class="status-msg"></div>
+        </div>
 
         <!-- የሱቅ ሊንክ ማጋሪያ -->
         <div class="share-box">
@@ -75,8 +90,6 @@
     <!-- 3. ለደንበኛው የሚታየው ሱቅ -->
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
-        
-        <!-- የምርት ፍለጋ ሳጥን (Search Bar) -->
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 ምርት በስም ፈልግ..." onkeyup="filterProducts()">
 
         <div class="grid" id="productGrid">
@@ -84,14 +97,13 @@
         </div>
     </div>
 
-    <!-- የብራንዲንግ እና የእውቂያ መረጃ (Footer) -->
     <footer>
         <p style="margin: 0 0 5px 0;">Powered by <strong>Melak Advertising</strong></p>
         <p style="margin: 0;">ለእርስዎም መሰል የዌብሳይትና የካታሎግ አፕሊኬሽን ለመስራት፦ <a href="tel:+251913064239">+251913064239</a></p>
     </footer>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_KuxupH5jnMp9JMTa-rf3nCa6P6UBKQWP_pKRA0vhyO-1DLBrmk55OO294O6nj9s/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgaKyN1OmJXfTMvYLpPQ2TSPJ9Pm4QsV8ls2f5omHKcRVhFZ8ZhDLNQW-dkfYm-WbX/exec"; 
         let currentPhone = "";
         let telegramUsername = "";
         let allProducts = [];
@@ -121,35 +133,59 @@
             const rawPhone = document.getElementById('sellerPhone').value.trim();
             const store = document.getElementById('storeName').value.trim();
             telegramUsername = document.getElementById('telegramUser').value.trim().replace('@', '');
+            const loginBtn = document.getElementById('loginBtn');
 
             if (!rawPhone) {
                 alert('እባክዎን የስልክ ቁጥር ያስገቡ!');
                 return;
             }
 
+            loginBtn.innerText = "እየገባ ነው... ⏳";
+            loginBtn.disabled = true;
+
             isSeller = true;
             currentPhone = cleanPhone(rawPhone);
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('seller-section').classList.remove('hidden');
-            document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
-            document.getElementById('storeTitle').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - የዕቃዎች ዝርዝር`;
 
-            const shareUrl = `${window.location.origin}${window.location.pathname}?phone=${currentPhone}&tg=${telegramUsername}`;
-            document.getElementById('storeShareUrl').innerText = shareUrl;
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'register_store', 
+                        phone: currentPhone, 
+                        store_name: store,
+                        telegram_username: telegramUsername
+                    })
+                });
+                
+                const data = await res.json();
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action: 'register_store', 
-                    phone: currentPhone, 
-                    store_name: store,
-                    telegram_username: telegramUsername
-                })
-            });
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('seller-section').classList.remove('hidden');
+                document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
+                document.getElementById('storeTitle').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - የዕቃዎች ዝርዝር`;
 
-            loadStoreProducts(currentPhone);
+                const shareUrl = `${window.location.origin}${window.location.pathname}?phone=${currentPhone}&tg=${telegramUsername}`;
+                document.getElementById('storeShareUrl').innerText = shareUrl;
+
+                // 7 ቀን አልፎት ከሆነ የክፍያ ማስጠንቀቂያ ማሳየት
+                if (data.isExpired) {
+                    showPaymentAlert("⚠️ የ1 ሳምንት የነፃ ሞከራ ጊዜዎ አብቅቷል!", "አገልግሎቱን ለመቀጠል እና ተጨማሪ ምርቶችን ለመጫን እባክዎን አባልነትዎን ያድሱ።");
+                }
+
+                loadStoreProducts(currentPhone);
+            } catch(e) {
+                alert("የመግባት ችግር አጋጥሟል! እባክዎን ደግመው ይሞክሩ።");
+            } finally {
+                loginBtn.innerText = "ሱቅ ክፈት / ግባ 🚀";
+                loginBtn.disabled = false;
+            }
+        }
+
+        function showPaymentAlert(title, desc) {
+            document.getElementById('paymentAlert').classList.remove('hidden');
+            document.getElementById('payAlertTitle').innerText = title;
+            document.getElementById('payAlertDesc').innerText = desc;
+            document.getElementById('addProductForm').classList.add('hidden'); // ፎርሙን መጋረድ
         }
 
         function copyStoreLink() {
@@ -178,10 +214,8 @@
                 statusDiv.innerText = "ምርቱ ወደ ሲስተም እየተላከ ነው...";
                 
                 try {
-                    await fetch(SCRIPT_URL, {
+                    const res = await fetch(SCRIPT_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             action: 'add_product',
                             seller_phone: currentPhone,
@@ -191,13 +225,24 @@
                         })
                     });
 
+                    const result = await res.json();
+
+                    if (result.status === "error") {
+                        if (result.message === "EXPIRED_TIME") {
+                            showPaymentAlert("⚠️ የነፃ ሞከራ ጊዜዎ አብቅቷል!", "የ1 ሳምንት የነፃ ጊዜዎ ስለተጠናቀቀ ተጨማሪ ምርት መጫን አይችሉም።");
+                        } else if (result.message === "EXPIRED_LIMIT") {
+                            showPaymentAlert("⚠️ የ10 ምርት ነፃ ኮታዎ አልቋል!", "ከ10 በላይ ምርት ለመጫን እባክዎን አባልነትዎን ያድሱ።");
+                        }
+                        return;
+                    }
+
                     alert('ምርቱ በተሳካ ሁኔታ ተመዝግቧል!');
                     document.getElementById('prodName').value = '';
                     document.getElementById('prodPrice').value = '';
                     document.getElementById('prodImageFile').value = '';
                     statusDiv.innerText = "";
                     
-                    setTimeout(() => { loadStoreProducts(currentPhone); }, 2500);
+                    loadStoreProducts(currentPhone);
                 } catch(err) {
                     alert('ምርቱን ሲጭን ስህተት አጋጥሟል!');
                 } finally {
@@ -271,8 +316,6 @@
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'delete_product', product_id: productId })
             });
 
@@ -284,11 +327,8 @@
             const custPhone = prompt("እባክዎን የትዕዛዝ ማረጋገጫ የስልክ ቁጥርዎን ያስገቡ፡");
             if (!custPhone) return;
 
-            // 1. ትዕዛዙን በ Sheet መመዝገብ
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'create_order',
                     seller_phone: sellerPhone,
@@ -298,7 +338,6 @@
                 })
             });
 
-            // 2. ወደ ቴሌግራም መምራት
             const message = encodeURIComponent(`ሰላም! '${prodName}' በ ${price} ብር ማዘዝ እፈልጋለሁ።\nየእኔ ስልክ ቁጥር፡ ${custPhone}`);
             let tgLink = telegramUsername ? `https://t.me/${telegramUsername}?text=${message}` : `https://t.me/share/url?url=&text=${message}`;
             

@@ -5,54 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>የ1-ደቂቃ ዲጂታል ሱቅ</title>
     <style>
-        * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background: #f4f6f8; padding: 15px; color: #333; }
-        .card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2, h3 { margin-bottom: 10px; color: #1a1a1a; }
-        input, button { width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; }
-        button { background: #0088cc; color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { background: #006699; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-        .product-card { background: #fff; border-radius: 8px; border: 1px solid #eee; overflow: hidden; text-align: center; padding: 10px; }
-        .product-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
-        .price { font-weight: bold; color: #28a745; margin: 5px 0; }
-        .buy-btn { background: #28a745; padding: 8px; font-size: 13px; }
+        .card { background: #fff; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2, h3 { margin-bottom: 12px; color: #1a1a1a; font-size: 18px; }
+        label { display: block; margin: 10px 0 4px; font-size: 13px; font-weight: bold; color: #555; }
+        input, button { width: 100%; padding: 12px; margin: 4px 0 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; outline: none; }
+        input:focus { border-color: #0088cc; }
+        button { background: #0088cc; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:active { opacity: 0.8; }
+        button:disabled { background: #aaa; cursor: not-allowed; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .product-card { background: #fff; border-radius: 10px; border: 1px solid #eee; overflow: hidden; text-align: center; padding: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .product-card img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; background: #f0f0f0; }
+        .product-card h4 { font-size: 14px; margin: 8px 0 4px; color: #222; }
+        .price { font-weight: bold; color: #28a745; margin-bottom: 8px; font-size: 15px; }
+        .buy-btn { background: #28a745; padding: 8px; font-size: 13px; margin: 0; }
         .hidden { display: none; }
+        .status-msg { font-size: 13px; color: #666; text-align: center; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <!-- 1. የሱቅ መመዝገቢያ -->
+    <!-- 1. የሱቅ መመዝገቢያ/መግቢያ -->
     <div class="card" id="login-section">
         <h2>📱 በስልክ ቁጥርዎ ይግቡ / ሱቅ ይክፈቱ</h2>
-        <input type="text" id="sellerPhone" placeholder="የስልክ ቁጥር (ምሳሌ፡ 0912345678)">
-        <input type="text" id="storeName" placeholder="የሱቅዎ ስም (ምሳሌ፡ Mela Fashion)">
+        <label for="sellerPhone">የስልክ ቁጥር</label>
+        <input type="tel" id="sellerPhone" placeholder="ምሳሌ፡ 0912345678">
+        
+        <label for="storeName">የሱቅዎ ስም</label>
+        <input type="text" id="storeName" placeholder="ምሳሌ፡ Mela Fashion">
+        
         <button onclick="loginOrRegisterStore()">ሱቅ ክፈት / ግባ 🚀</button>
     </div>
 
     <!-- 2. የነጋዴው ማስገቢያ ፎርም -->
     <div class="card hidden" id="seller-section">
         <h2 id="welcomeMsg">🛍️ አዲስ ምርት ጨምር</h2>
-        <input type="text" id="prodName" placeholder="የምርቱ ስም">
-        <input type="number" id="prodPrice" placeholder="ዋጋ (በብር)">
-        <input type="text" id="prodImage" placeholder="የምርቱ ፎቶ Link (URL)">
-        <button onclick="addProduct()">ምርቱን በSpreadsheet መዝግብ 💾</button>
+        
+        <label for="prodName">የምርቱ ስም</label>
+        <input type="text" id="prodName" placeholder="ምሳሌ፡ የወንዶች ጂንስ">
+        
+        <label for="prodPrice">ዋጋ (በብር)</label>
+        <input type="number" id="prodPrice" placeholder="ምሳሌ፡ 2500">
+        
+        <label for="prodImageFile">የምርቱ ፎቶ (ከካሜራ ወይም ከጋለሪ)</label>
+        <input type="file" id="prodImageFile" accept="image/*" capture="environment">
+        
+        <button id="saveBtn" onclick="addProduct()">ምርቱን መዝግብ 📸</button>
+        <div id="loadingStatus" class="status-msg"></div>
     </div>
 
     <!-- 3. ለደንበኛው የሚታየው ሱቅ -->
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
-        <div class="grid" id="productGrid"></div>
+        <div class="grid" id="productGrid">
+            <p style="grid-column: 1/-1; text-align: center; color: #888;">ምንም የተጫነ ምርት የለም።</p>
+        </div>
     </div>
 
     <script>
-        // የ Google Apps Script Web App URL እዚህ ጋር ተካው
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8H8Qft5KlXkJ8HVmxVhb5tQpz6kT2iTWf9cIcAl6JAyUYfpRJCp9hpzVvKzQEibcA/exec"; 
+        // የራስህን የ Apps Script Web App URL እዚህ ጋር ተካው
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGs6sAsMgPHLiOIhmWxsU0zWwcVtiI12b_se5dSPshYTHGQ3fKU2AaGPuFRHOPfghy/exec"; 
         let currentPhone = "";
 
         async function loginOrRegisterStore() {
-            const phone = document.getElementById('sellerPhone').value;
-            const store = document.getElementById('storeName').value;
+            const phone = document.getElementById('sellerPhone').value.trim();
+            const store = document.getElementById('storeName').value.trim();
 
             if (!phone) {
                 alert('እባክዎን የስልክ ቁጥር ያስገቡ!');
@@ -64,7 +83,6 @@
             document.getElementById('seller-section').classList.remove('hidden');
             document.getElementById('welcomeMsg').innerText = `🛍️ ${store || 'የእኔ ሱቅ'} - አዲስ ምርት ጨምር`;
 
-            // በ Spreadsheet መመዝገብ
             fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -76,37 +94,62 @@
         }
 
         async function addProduct() {
-            const name = document.getElementById('prodName').value;
-            const price = document.getElementById('prodPrice').value;
-            const imageUrl = document.getElementById('prodImage').value;
+            const name = document.getElementById('prodName').value.trim();
+            const price = document.getElementById('prodPrice').value.trim();
+            const fileInput = document.getElementById('prodImageFile');
+            const saveBtn = document.getElementById('saveBtn');
+            const statusDiv = document.getElementById('loadingStatus');
 
-            if (!name || !price) {
-                alert('እባክዎን ስምና ዋጋ ያስገቡ!');
+            if (!name || !price || !fileInput.files[0]) {
+                alert('እባክዎን ስም፣ ዋጋ እና ፎቶ ያስገቡ!');
                 return;
             }
 
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'add_product',
-                    seller_phone: currentPhone,
-                    name: name,
-                    price: price,
-                    image_url: imageUrl || 'https://via.placeholder.com/150'
-                })
-            });
+            saveBtn.innerText = "ምርቱ እየተጫነ ነው... ⏳";
+            saveBtn.disabled = true;
+            statusDiv.innerText = "ፎቶው ወደ Google Drive እየተላከ ነው...";
 
-            alert('ምርቱ በ Spreadsheet ተመዝግቧል!');
-            document.getElementById('prodName').value = '';
-            document.getElementById('prodPrice').value = '';
-            document.getElementById('prodImage').value = '';
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = async function (e) {
+                const base64Image = e.target.result;
 
-            setTimeout(() => { loadStoreProducts(currentPhone); }, 1500);
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'add_product',
+                            seller_phone: currentPhone,
+                            name: name,
+                            price: price,
+                            image_data: base64Image
+                        })
+                    });
+
+                    alert('ምርቱ ከነፎቶው በተሳካ ሁኔታ ተመዝግቧል!');
+                    document.getElementById('prodName').value = '';
+                    document.getElementById('prodPrice').value = '';
+                    document.getElementById('prodImageFile').value = '';
+                    statusDiv.innerText = "";
+                    
+                    setTimeout(() => { loadStoreProducts(currentPhone); }, 2500);
+                } catch(err) {
+                    alert('ምርቱን ሲጭን ስህተት አጋጥሟል!');
+                    statusDiv.innerText = "";
+                } finally {
+                    saveBtn.innerText = "ምርቱን መዝግብ 📸";
+                    saveBtn.disabled = false;
+                }
+            };
+
+            reader.readAsDataURL(file);
         }
 
         async function loadStoreProducts(phone) {
+            const grid = document.getElementById('productGrid');
             try {
                 const res = await fetch(`${SCRIPT_URL}?phone=${phone}`);
                 const products = await res.json();
@@ -120,13 +163,13 @@
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
             if(!products || products.length === 0) {
-                grid.innerHTML = '<p>ምንም የተጫነ ምርት የለም።</p>';
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888;">ምንም የተጫነ ምርት የለም።</p>';
                 return;
             }
             products.forEach((p) => {
                 grid.innerHTML += `
                     <div class="product-card">
-                        <img src="${p.image_url}">
+                        <img src="${p.image_url}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150'">
                         <h4>${p.name}</h4>
                         <div class="price">${p.price} ብር</div>
                         <button class="buy-btn" onclick="buyProduct('${p.name}', '${p.price}')">በቴሌብር ግዛ</button>

@@ -31,7 +31,11 @@
         .buy-btn { background: #0088cc; padding: 8px; font-size: 13px; margin: 4px 0 0; }
         .edit-btn { background: #f0ad4e; padding: 6px; font-size: 11px; margin-top: 5px; width: 48%; display: inline-block; }
         .delete-btn { background: #dc3545; padding: 6px; font-size: 11px; margin-top: 5px; width: 48%; display: inline-block; }
-        .gps-badge { display: inline-block; background: #e9ecef; color: #495057; font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-top: 4px; font-weight: bold; }
+        
+        /* የ GPS ሊንክ ስታይል */
+        .gps-link-btn { display: inline-block; background: #e7f3ff; color: #0088cc; font-size: 13px; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-weight: bold; text-decoration: none; border: 1px solid #b3d7ff; }
+        .gps-link-btn:hover { background: #0088cc; color: white; }
+
         .search-box { margin-bottom: 15px; }
         .hidden { display: none; }
         .status-msg { font-size: 13px; color: #666; text-align: center; margin-top: 5px; }
@@ -84,6 +88,7 @@
         <!-- የሱቅ GPS አድራሻ ቁጥሮች ማስገቢያ -->
         <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; margin-top: 15px;">
             <label>📍 የሱቅ GPS አድራሻ (Lat, Long ቁጥሮች)</label>
+            <button type="button" onclick="getCurrentLocation()" style="background: #17a2b8; padding: 8px; font-size: 13px; margin-bottom: 8px;">🎯 አሁን ያለሁበትን ቦታ በራስ-ሰር ፈልግ</button>
             <div style="display: flex; gap: 8px;">
                 <input type="number" step="any" id="gpsLat" placeholder="Latitude (ምሳሌ: 9.0102)">
                 <input type="number" step="any" id="gpsLng" placeholder="Longitude (ምሳሌ: 38.7612)">
@@ -102,7 +107,10 @@
     <!-- 3. ለደንበኛው የሚታየው ሱቅ -->
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
-        <div id="storeGpsDisplay" class="gps-badge hidden"></div>
+        
+        <!-- ለደንበኛው የሚታይ የ Google Maps ሊንክ -->
+        <div id="storeGpsDisplay" class="hidden"></div>
+        
         <input type="text" id="searchInput" class="search-box" style="margin-top: 10px;" placeholder="🔍 ምርት በስም ፈልግ..." onkeyup="filterProducts()">
 
         <div class="grid" id="productGrid">
@@ -188,7 +196,6 @@
                     }
                 }
 
-                // 7 ቀን አልፎት ከሆነ የክፍያ ማስጠንቀቂያ ማሳየት
                 if (data.isExpired) {
                     showPaymentAlert("⚠️ የ1 ሳምንት የነፃ ሞከራ ጊዜዎ አብቅቷል!", "አገልግሎቱን ለመቀጠል እና ተጨማሪ ምርቶችን ለመጫን እባክዎን አባልነትዎን ያድሱ።");
                 }
@@ -206,13 +213,31 @@
             document.getElementById('paymentAlert').classList.remove('hidden');
             document.getElementById('payAlertTitle').innerText = title;
             document.getElementById('payAlertDesc').innerText = desc;
-            document.getElementById('addProductForm').classList.add('hidden'); // ፎርሙን መጋረድ
+            document.getElementById('addProductForm').classList.add('hidden');
         }
 
         function copyStoreLink() {
             const shareUrl = document.getElementById('storeShareUrl').innerText;
             navigator.clipboard.writeText(shareUrl);
             alert('የሱቅዎ ሊንክ ኮፒ ተደርጓል!');
+        }
+
+        // የሞባይል/ኮምፒውተሩን GPS ቦታ በራስ-ሰር መፈለጊያ
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('gpsLat').value = position.coords.latitude;
+                        document.getElementById('gpsLng').value = position.coords.longitude;
+                        alert("ያሉበት የ GPS ቦታ በራስ-ሰር ተገኝቷል!");
+                    },
+                    (error) => {
+                        alert("የ GPS ቦታን ማግኘት አልተቻለም። እባክዎን Location Permisssion መስጠትዎን ያረጋግጡ።");
+                    }
+                );
+            } else {
+                alert("ስልክዎ/ብራውዘርዎ GPS አገልግሎት አይደግፍም።");
+            }
         }
 
         async function updateGpsLocation() {
@@ -329,9 +354,18 @@
                 
                 if (data.products) {
                     allProducts = data.products;
+                    
+                    // GPS ቁጥሩ ከተገኘ ወደ Google Maps ሊንክ መቀየር
                     if (data.store && data.store.location) {
                         const gpsBox = document.getElementById('storeGpsDisplay');
-                        gpsBox.innerText = `📍 የሱቅ GPS አድራሻ ቁጥር: ${data.store.location}`;
+                        const coords = data.store.location.trim();
+                        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coords)}`;
+                        
+                        gpsBox.innerHTML = `
+                            <a href="${mapUrl}" target="_blank" class="gps-link-btn">
+                                📍 የሱቅ አድራሻ በካርታ ለመመልከት ይጫኑ (Google Maps) 🗺️
+                            </a>
+                        `;
                         gpsBox.classList.remove('hidden');
                     }
                 } else {

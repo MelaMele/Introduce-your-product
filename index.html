@@ -18,7 +18,6 @@
         .share-box { background: #eef7ff; border: 1px dashed #0088cc; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; }
         .share-box p { font-size: 13px; color: #333; word-break: break-all; font-weight: bold; margin-bottom: 8px; }
         
-        /* የክፍያ ማስጠንቀቂያ ሳጥን CSS */
         .pay-banner { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
         .pay-banner h3 { color: #856404; margin-bottom: 6px; }
         .pay-banner a { display: inline-block; background: #28a745; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 8px; }
@@ -32,7 +31,6 @@
         .edit-btn { background: #f0ad4e; padding: 6px; font-size: 11px; margin-top: 5px; width: 48%; display: inline-block; }
         .delete-btn { background: #dc3545; padding: 6px; font-size: 11px; margin-top: 5px; width: 48%; display: inline-block; }
         
-        /* የ GPS ሊንክ ስታይል */
         .gps-link-btn { display: inline-block; background: #e7f3ff; color: #0088cc; font-size: 13px; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-weight: bold; text-decoration: none; border: 1px solid #b3d7ff; width: 100%; text-align: center; }
         .gps-link-btn:hover { background: #0088cc; color: white; }
 
@@ -45,7 +43,7 @@
 </head>
 <body>
 
-    <!-- 1. የሱቅ መመዝገቢያ/መግቢያ (ለነጋዴው) -->
+    <!-- 1. የሱቅ መመዝገቢያ/መግቢያ -->
     <div class="card" id="login-section">
         <h2>📱 በስልክ ቁጥርዎ ይግቡ / ሱቅ ይክፈቱ</h2>
         <label for="sellerPhone">የስልክ ቁጥር</label>
@@ -64,7 +62,6 @@
     <div class="card hidden" id="seller-section">
         <h2 id="welcomeMsg">🛍️ አዲስ ምርት ጨምር</h2>
 
-        <!-- የክፍያ ማስጠንቀቂያ ሳጥን (ለጊዜው የተሰወረ) -->
         <div id="paymentAlert" class="pay-banner hidden">
             <h3 id="payAlertTitle">⚠️ የነፃ ሞከራ ጊዜዎ አብቅቷል!</h3>
             <p id="payAlertDesc">ያልተገደበ አገልግሎት ለማግኘት እና ተጨማሪ ምርቶችን ለመጫን አባልነትዎን ያድሱ።</p>
@@ -85,7 +82,6 @@
             <div id="loadingStatus" class="status-msg"></div>
         </div>
 
-        <!-- የሱቅ GPS አድራሻ ቁጥሮች ማስገቢያ -->
         <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0; margin-top: 15px;">
             <label>📍 የሱቅ GPS አድራሻ (Lat, Long ቁጥሮች)</label>
             <button type="button" onclick="getCurrentLocation()" style="background: #17a2b8; padding: 8px; font-size: 13px; margin-bottom: 8px;">🎯 አሁን ያለሁበትን ቦታ በራስ-ሰር ፈልግ</button>
@@ -96,7 +92,6 @@
             <button onclick="updateGpsLocation()" style="background: #28a745; padding: 8px; font-size: 13px; margin: 0;">የ GPS ቁጥሮችን መዝግብ 📍</button>
         </div>
 
-        <!-- የሱቅ ሊንክ ማጋሪያ -->
         <div class="share-box">
             <span style="font-size: 12px; color: #555;">የእርስዎ የሱቅ ሊንክ (ለደንበኞች የሚያጋሩት)፡</span>
             <p id="storeShareUrl">...</p>
@@ -108,7 +103,6 @@
     <div class="card">
         <h3 id="storeTitle">የእኔ ዲጂታል ካታሎግ</h3>
         
-        <!-- ለደንበኛው የሚታይ የ Google Maps ሊንክ -->
         <div id="storeGpsDisplay" class="hidden"></div>
         
         <input type="text" id="searchInput" class="search-box" style="margin-top: 10px;" placeholder="🔍 ምርት በስም ፈልግ..." onkeyup="filterProducts()">
@@ -124,7 +118,7 @@
     </footer>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPc4NtztKZHd4RdxN6lZYZd6gPsgO9k4y36myWKhas9WJZ5F5OrqHWv7jAwMiFQa5C/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymNuJ-8pUNcOVyI0DNf3MdLnMcK39kqHYyMBqhqTCvAfWz4_WT2C3SqzH4EUdAFB7D/exec"; 
         let currentPhone = "";
         let telegramUsername = "";
         let allProducts = [];
@@ -225,7 +219,6 @@
             alert('የሱቅዎ ሊንክ ኮፒ ተደርጓል!');
         }
 
-        // የሞባይል/ኮምፒውተሩን GPS ቦታ በራስ-ሰር መፈለጊያ
         function getCurrentLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -286,7 +279,8 @@
             saveBtn.disabled = true;
 
             const file = fileInput.files[0];
-            compressImage(file, 800, 0.7, async function(base64Image) {
+            // ምስሉን ወደ 600px ስፋት እና 0.5 quality በመጭመቅ መጠኑን ያንሰዋል
+            compressImage(file, 600, 0.5, async function(base64Image) {
                 statusDiv.innerText = "ምርቱ ወደ ሲስተም እየተላከ ነው...";
                 
                 try {
@@ -363,7 +357,6 @@
                         telegramUsername = data.store.telegram;
                     }
                     
-                    // GPS ቁጥሩ ከተገኘ ወደ Google Maps ሊንክ መቀየር
                     if (data.store.location) {
                         const gpsBox = document.getElementById('storeGpsDisplay');
                         const coords = data.store.location.trim();
@@ -399,20 +392,32 @@
         function renderProducts(products) {
             const grid = document.getElementById('productGrid');
             grid.innerHTML = '';
+            
             if(!products || products.length === 0) {
                 grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #888;">ምንም የተጫነ ምርት የለም።</p>';
                 return;
             }
+
             products.forEach((p) => {
+                // Base64 Prefix ማረጋገጫ
+                let imgSrc = p.image_url || '';
+                if (imgSrc && !imgSrc.startsWith('http') && !imgSrc.startsWith('data:image')) {
+                    imgSrc = 'data:image/jpeg;base64,' + imgSrc;
+                }
+                if (!imgSrc) {
+                    imgSrc = 'https://via.placeholder.com/150?text=No+Image';
+                }
+
                 let adminButtonsHtml = isSeller ? `
                     <div style="display: flex; justify-content: space-between; margin-top: 5px;">
                         <button class="edit-btn" onclick="editProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}', '${p.price}')">አስተካክል ✏️</button>
                         <button class="delete-btn" onclick="deleteProduct('${p.id}')">አጥፋ 🗑️</button>
                     </div>
                 ` : '';
+
                 grid.innerHTML += `
                     <div class="product-card">
-                        <img src="${p.image_url}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150'">
+                        <img src="${imgSrc}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
                         <h4>${p.name}</h4>
                         <div class="price">${p.price} ብር</div>
                         <button class="buy-btn" onclick="orderByTelegram('${p.name.replace(/'/g, "\\'")}', '${p.price}', '${p.seller_phone}')">በቴሌግራም እዘዝ ✈️</button>

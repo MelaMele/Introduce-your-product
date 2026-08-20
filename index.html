@@ -33,7 +33,7 @@
         .delete-btn { background: #dc3545; padding: 6px; font-size: 11px; margin-top: 5px; width: 48%; display: inline-block; }
         
         /* የ GPS ሊንክ ስታይል */
-        .gps-link-btn { display: inline-block; background: #e7f3ff; color: #0088cc; font-size: 13px; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-weight: bold; text-decoration: none; border: 1px solid #b3d7ff; }
+        .gps-link-btn { display: inline-block; background: #e7f3ff; color: #0088cc; font-size: 13px; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-weight: bold; text-decoration: none; border: 1px solid #b3d7ff; width: 100%; text-align: center; }
         .gps-link-btn:hover { background: #0088cc; color: white; }
 
         .search-box { margin-bottom: 15px; }
@@ -124,7 +124,7 @@
     </footer>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7W5o37WhtIkTKKhL2kK2cRN4VQmT5e7700RaZ3KxsoFrnpYVkK8jpUyxgYG9v_yM/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPc4NtztKZHd4RdxN6lZYZd6gPsgO9k4y36myWKhas9WJZ5F5OrqHWv7jAwMiFQa5C/exec"; 
         let currentPhone = "";
         let telegramUsername = "";
         let allProducts = [];
@@ -139,14 +139,16 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const phoneParam = urlParams.get('phone');
-            telegramUsername = urlParams.get('tg') || "";
+            const tgParam = urlParams.get('tg');
 
             if (phoneParam) {
-                const cleanedPhone = cleanPhone(phoneParam);
+                currentPhone = cleanPhone(phoneParam);
+                if (tgParam) telegramUsername = tgParam;
+                
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('seller-section').classList.add('hidden');
                 document.getElementById('storeTitle').innerText = `🛒 የሱቅ ካታሎግ`;
-                loadStoreProducts(cleanedPhone);
+                loadStoreProducts(currentPhone);
             }
         };
 
@@ -202,6 +204,7 @@
 
                 loadStoreProducts(currentPhone);
             } catch(e) {
+                console.error("Login error:", e);
                 alert("የመግባት ችግር አጋጥሟል! እባክዎን ደግመው ይሞክሩ።");
             } finally {
                 loginBtn.innerText = "ሱቅ ክፈት / ግባ 🚀";
@@ -232,7 +235,7 @@
                         alert("ያሉበት የ GPS ቦታ በራስ-ሰር ተገኝቷል!");
                     },
                     (error) => {
-                        alert("የ GPS ቦታን ማግኘት አልተቻለም። እባክዎን Location Permisssion መስጠትዎን ያረጋግጡ።");
+                        alert("የ GPS ቦታን ማግኘት አልተቻለም። እባክዎን Location Permission መስጠትዎን ያረጋግጡ።");
                     }
                 );
             } else {
@@ -352,11 +355,16 @@
                 const res = await fetch(`${SCRIPT_URL}?phone=${phone}`);
                 const data = await res.json();
                 
-                if (data.products) {
-                    allProducts = data.products;
+                if (data.store) {
+                    if (data.store.name) {
+                        document.getElementById('storeTitle').innerText = `🛍️ ${data.store.name} - የዕቃዎች ዝርዝር`;
+                    }
+                    if (data.store.telegram && !telegramUsername) {
+                        telegramUsername = data.store.telegram;
+                    }
                     
                     // GPS ቁጥሩ ከተገኘ ወደ Google Maps ሊንክ መቀየር
-                    if (data.store && data.store.location) {
+                    if (data.store.location) {
                         const gpsBox = document.getElementById('storeGpsDisplay');
                         const coords = data.store.location.trim();
                         const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coords)}`;
@@ -368,6 +376,10 @@
                         `;
                         gpsBox.classList.remove('hidden');
                     }
+                }
+
+                if (data.products) {
+                    allProducts = data.products;
                 } else {
                     allProducts = Array.isArray(data) ? data : [];
                 }
@@ -393,8 +405,8 @@
             }
             products.forEach((p) => {
                 let adminButtonsHtml = isSeller ? `
-                    <div style="display: flex; justify-content: space-between;">
-                        <button class="edit-btn" onclick="editProduct('${p.id}', '${p.name}', '${p.price}')">አስተካክል ✏️</button>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                        <button class="edit-btn" onclick="editProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}', '${p.price}')">አስተካክል ✏️</button>
                         <button class="delete-btn" onclick="deleteProduct('${p.id}')">አጥፋ 🗑️</button>
                     </div>
                 ` : '';
@@ -403,7 +415,7 @@
                         <img src="${p.image_url}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150'">
                         <h4>${p.name}</h4>
                         <div class="price">${p.price} ብር</div>
-                        <button class="buy-btn" onclick="orderByTelegram('${p.name}', '${p.price}', '${p.seller_phone}')">በቴሌግራም እዘዝ ✈️</button>
+                        <button class="buy-btn" onclick="orderByTelegram('${p.name.replace(/'/g, "\\'")}', '${p.price}', '${p.seller_phone}')">በቴሌግራም እዘዝ ✈️</button>
                         ${adminButtonsHtml}
                     </div>
                 `;
@@ -442,13 +454,17 @@
         async function deleteProduct(productId) {
             if (!confirm('እርግጠኛ ነዎት ይህንን ምርት ማጥፋት ይፈልጋሉ?')) return;
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'delete_product', product_id: productId })
-            });
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete_product', product_id: productId })
+                });
 
-            alert('ምርቱ ጠፍቷል!');
-            setTimeout(() => { loadStoreProducts(currentPhone); }, 1500);
+                alert('ምርቱ ጠፍቷል!');
+                loadStoreProducts(currentPhone);
+            } catch(e) {
+                alert('ምርቱን ማጥፋት አልተቻለም!');
+            }
         }
 
         async function orderByTelegram(prodName, price, sellerPhone) {

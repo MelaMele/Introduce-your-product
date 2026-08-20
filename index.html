@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>የ1-ደቂቃ ዲጂታል ሱቅ</title>
+    <title>ዘመናዊ ዲጂታል ሱቅ</title>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background: #f4f6f8; padding: 15px; color: #333; }
@@ -118,7 +118,7 @@
     </footer>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymNuJ-8pUNcOVyI0DNf3MdLnMcK39kqHYyMBqhqTCvAfWz4_WT2C3SqzH4EUdAFB7D/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHoPRVSThTdzOgLkKQdOZSgQJty72qn2umtTu3QneR2hn_uC14ldyjDqpbbNSxNHxh/exec"; 
         let currentPhone = "";
         let telegramUsername = "";
         let allProducts = [];
@@ -417,7 +417,7 @@
 
                 grid.innerHTML += `
                     <div class="product-card">
-                        <img src="${imgSrc}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/150?text=Error'">
+                        <img src="${imgSrc}" alt="${p.name}" referrerpolicy="no-referrer" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=Error'">
                         <h4>${p.name}</h4>
                         <div class="price">${p.price} ብር</div>
                         <button class="buy-btn" onclick="orderByTelegram('${p.name.replace(/'/g, "\\'")}', '${p.price}', '${p.seller_phone}')">በቴሌግራም እዘዝ ✈️</button>
